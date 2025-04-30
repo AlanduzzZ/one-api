@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 	"time"
+	"strings"
 
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ type LarkOAuthResponse struct {
 type LarkUser struct {
 	Name   string `json:"name"`
 	OpenID string `json:"open_id"`
+	Email  string `json:"email"`
 }
 
 func getLarkUserInfoByCode(code string) (*LarkUser, error) {
@@ -118,7 +120,12 @@ func LarkOAuth(c *gin.Context) {
 		}
 	} else {
 		if config.RegisterEnabled {
-			user.Username = "lark_" + strconv.Itoa(model.GetMaxUserId()+1)
+			parts := strings.Split(larkUser.Email, "@")
+			if len(parts) > 1 {
+				user.Username = parts[0]
+			} else {
+				user.Username = "lark_" + strconv.Itoa(model.GetMaxUserId()+1)
+			}
 			if larkUser.Name != "" {
 				user.DisplayName = larkUser.Name
 			} else {
