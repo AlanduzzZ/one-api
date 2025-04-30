@@ -2,9 +2,11 @@ package config
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -22,6 +24,9 @@ func init() {
 		}
 
 		SessionSecret = base64.StdEncoding.EncodeToString(key)
+	} else if !slices.Contains([]int{16, 24, 32}, len(SessionSecret)) {
+		hashed := sha256.Sum256([]byte(SessionSecret))
+		SessionSecret = base64.StdEncoding.EncodeToString(hashed[:32])
 	}
 }
 
