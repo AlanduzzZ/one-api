@@ -95,11 +95,8 @@ func RootAuth() func(c *gin.Context) {
 func TokenAuth() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		ctx := c.Request.Context()
-		key := c.Request.Header.Get("Authorization")
-		key = strings.TrimPrefix(key, "Bearer ")
-		key = strings.TrimPrefix(strings.TrimPrefix(key, "sk-"), "laisky-")
-		parts := strings.Split(key, "-")
-		key = parts[0]
+		parts := GetTokenKeyParts(c)
+		key := parts[0]
 		token, err := model.ValidateUserToken(key)
 		if err != nil {
 			AbortWithError(c, http.StatusUnauthorized, err)

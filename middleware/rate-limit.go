@@ -19,7 +19,12 @@ func redisRateLimiter(c *gin.Context, maxRequestNum int, duration int64, mark st
 	ctx := gmw.Ctx(c)
 
 	rdb := common.RDB
+
 	key := "rateLimit:" + mark + c.ClientIP()
+	if mark == "GR" {
+		key = "rateLimit:" + mark + GetTokenKeyParts(c)[0]
+	}
+
 	listLength, err := rdb.LLen(ctx, key).Result()
 	if err != nil {
 		AbortWithError(c, http.StatusInternalServerError, errors.Wrap(err, "failed to get list length"))
@@ -64,6 +69,9 @@ func redisRateLimiter(c *gin.Context, maxRequestNum int, duration int64, mark st
 
 func memoryRateLimiter(c *gin.Context, maxRequestNum int, duration int64, mark string) {
 	key := mark + c.ClientIP()
+	if mark == "GR" {
+		key = mark + GetTokenKeyParts(c)[0]
+	}
 	if !inMemoryRateLimiter.Request(key, maxRequestNum, duration) {
 		AbortWithError(c, http.StatusTooManyRequests, errors.New("rate limit exceeded"))
 		return
@@ -107,4 +115,8 @@ func DownloadRateLimit() func(c *gin.Context) {
 
 func UploadRateLimit() func(c *gin.Context) {
 	return rateLimitFactory(config.UploadRateLimitNum, config.UploadRateLimitDuration, "UP")
+}
+
+func GlobalRelayRateLimit() func(c *gin.Context) {
+	return rateLimitFactory(config.GlobalRelayRateLimitNum, config.GlobalRelayRateLimitDuration, "GR")
 }

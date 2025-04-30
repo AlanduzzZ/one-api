@@ -76,3 +76,10 @@ func isModelInList(modelName string, models string) bool {
 	}
 	return false
 }
+
+func GetTokenKeyParts(c *gin.Context) []string {
+	key := c.Request.Header.Get("Authorization")
+	key = strings.TrimPrefix(key, "Bearer ")
+	key = strings.TrimPrefix(strings.TrimPrefix(key, "sk-"), "laisky-")
+	return strings.Split(key, "-")
+}
