@@ -127,6 +127,8 @@
       "completion_ratio": "Completion Pricing",
       "completion_ratio_placeholder": "Optional, channel-specific completion token pricing ratios in JSON format.",
       "completion_ratio_help": "JSON format: {\"model-name\": completion_ratio}. Completion ratio is multiplied by completion tokens.",
+      "max_tokens": "Model Max Tokens",
+      "max_tokens_placeholder": "Optional, The maximum context length supported by the model. It will attempt to send the request via the channel of the model with the minimum context length.",
       "buttons": {
         "cancel": "Cancel",
         "submit": "Submit",

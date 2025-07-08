@@ -42,6 +42,7 @@ type Channel struct {
 	// Channel-specific pricing tables
 	ModelRatio      *string `json:"model_ratio" gorm:"type:text"`      // JSON string of model pricing ratios
 	CompletionRatio *string `json:"completion_ratio" gorm:"type:text"` // JSON string of completion pricing ratios
+	MaxTokens       *int32    `json:"max_tokens" gorm:"column:max_tokens;default:0"`
 }
 
 type ChannelConfig struct {
@@ -108,6 +109,13 @@ func (channel *Channel) GetPriority() int64 {
 		return 0
 	}
 	return *channel.Priority
+}
+
+func (channel *Channel) GetMaxTokens() int32 {
+	if channel.MaxTokens == nil {
+		return 0
+	}
+	return *channel.MaxTokens
 }
 
 func (channel *Channel) GetBaseURL() string {

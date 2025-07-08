@@ -108,6 +108,7 @@ func Relay(c *gin.Context) {
 	// For 429 errors, we should try lower priority channels first
 	// since the highest priority channel is rate limited
 	shouldTryLowerPriorityFirst := bizErr.StatusCode == http.StatusTooManyRequests
+	shouldTryLargerMaxTokensFirst := bizErr.StatusCode == http.StatusRequestEntityTooLarge
 
 	for i := retryTimes; i > 0; i-- {
 		var channel *dbmodel.Channel
@@ -119,20 +120,23 @@ func Relay(c *gin.Context) {
 				retryTimes-i+1, getChannelIds(failedChannels), shouldTryLowerPriorityFirst)
 		}
 
-		if shouldTryLowerPriorityFirst {
+		if shouldTryLargerMaxTokensFirst {
+			// For 413 errors, try larger max_tokens channels
+			channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, true, failedChannels, false)
+		} else if shouldTryLowerPriorityFirst {
 			// For 429 errors, first try lower priority channels while excluding failed ones
-			channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, true, failedChannels)
+			channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, true, failedChannels, false)
 			if err != nil {
 				// If no lower priority channels available, try highest priority channels (excluding failed ones)
 				logger.Infof(ctx, "No lower priority channels available, trying highest priority channels, excluding: %v", getChannelIds(failedChannels))
-				channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, false, failedChannels)
+				channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, false, failedChannels, false)
 			}
 		} else {
 			// For non-429 errors, try highest priority first, then lower priority (excluding failed ones)
-			channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, false, failedChannels)
+			channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, false, failedChannels, false)
 			if err != nil {
 				logger.Infof(ctx, "No highest priority channels available, trying lower priority channels, excluding: %v", getChannelIds(failedChannels))
-				channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, true, failedChannels)
+				channel, err = dbmodel.CacheGetRandomSatisfiedChannelExcluding(group, originalModel, true, failedChannels, false)
 			}
 		}
 

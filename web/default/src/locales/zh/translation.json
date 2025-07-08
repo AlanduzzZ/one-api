@@ -127,6 +127,8 @@
       "completion_ratio": "输出定价",
       "completion_ratio_placeholder": "可选，渠道专用输出 token 定价倍率，JSON 格式。",
       "completion_ratio_help": "JSON 格式：{\"模型名称\": 输出倍率}。输出倍率乘以输出 token 数量。",
+      "max_tokens": "模型上下文长度",
+      "max_tokens_placeholder": "可选，模型支持的最大上下文长度。会从支持的最小的上下文长度的模型的渠道尝试请求",
       "buttons": {
         "cancel": "取消",
         "submit": "提交",

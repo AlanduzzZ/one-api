@@ -265,11 +265,25 @@ func InitChannelCache() {
 		}
 	}
 
-	// sort by priority
+	// sort by priority and max_tokens
 	for group, model2channels := range newGroup2model2channels {
 		for model, channels := range model2channels {
 			sort.Slice(channels, func(i, j int) bool {
-				return channels[i].GetPriority() > channels[j].GetPriority()
+				pi, pj := channels[i].GetPriority(), channels[j].GetPriority()
+				if pi != pj {
+					// sort by priority
+					return pi > pj
+				}
+				// sort by max_tokens
+				// 0 means maximum
+				ti, tj := channels[i].GetMaxTokens(), channels[j].GetMaxTokens()
+				if ti == 0 && tj != 0 {
+					return false
+				}
+				if ti != 0 && tj == 0 {
+					return true
+				}
+				return ti < tj
 			})
 			newGroup2model2channels[group][model] = channels
 		}
@@ -331,7 +345,20 @@ func CacheGetRandomSatisfiedChannel(group string, model string, ignoreFirstPrior
 			}
 		}
 	}
+
+	candidateChannels = candidateChannels[:endIdx]
+
+	minTokensChannel := candidateChannels[0]
+	if minTokensChannel.GetMaxTokens() > 0 {
+		for i := range candidateChannels {
+			if candidateChannels[i].GetMaxTokens() != firstChannel.GetMaxTokens() {
+				endIdx = i
+				break
+			}
+		}
+	}
 	idx := rand.Intn(endIdx)
+
 	if ignoreFirstPriority {
 		if endIdx < len(candidateChannels) { // which means there are more than one priority
 			idx = random.RandRange(endIdx, len(candidateChannels))
@@ -355,7 +382,7 @@ func CacheGetRandomSatisfiedChannel(group string, model string, ignoreFirstPrior
 }
 
 // CacheGetRandomSatisfiedChannelExcluding gets a random satisfied channel while excluding specified channel IDs
-func CacheGetRandomSatisfiedChannelExcluding(group string, model string, ignoreFirstPriority bool, excludeChannelIds map[int]bool) (*Channel, error) {
+func CacheGetRandomSatisfiedChannelExcluding(group string, model string, ignoreFirstPriority bool, excludeChannelIds map[int]bool, ignoreFirstMaxTokens bool) (*Channel, error) {
 	if !config.MemoryCacheEnabled {
 		return GetRandomSatisfiedChannelExcluding(group, model, ignoreFirstPriority, excludeChannelIds)
 	}
@@ -373,6 +400,25 @@ func CacheGetRandomSatisfiedChannelExcluding(group string, model string, ignoreF
 		if !excludeChannelIds[channel.Id] {
 			candidateChannels = append(candidateChannels, channel)
 		}
+	}
+
+	// For Http Code 413
+	// Filter out small max_tokens channels
+	if ignoreFirstMaxTokens {
+		var maxTokensSizeChannels []*Channel
+		maxTokensSizes := make(map[*int32]bool)
+		for _, channel := range channelsFromCache {
+			if excludeChannelIds[channel.Id] {
+				maxTokensSizes[channel.MaxTokens] = true
+			}
+		}
+
+		for _, channel := range channelsFromCache {
+			if maxTokensSizes[channel.MaxTokens] {
+				maxTokensSizeChannels = append(maxTokensSizeChannels, channel)
+			}
+		}
+		candidateChannels = maxTokensSizeChannels
 	}
 	channelSyncLock.RUnlock()
 

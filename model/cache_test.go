@@ -35,59 +35,74 @@ func TestCacheGetRandomSatisfiedChannelExcluding(t *testing.T) {
 	group2model2channels[testGroup][testModel] = channels
 
 	tests := []struct {
-		name                string
-		excludeChannelIds   map[int]bool
-		ignoreFirstPriority bool
-		expectedChannelIds  []int // Possible channel IDs that could be returned
-		shouldError         bool
+		name                 string
+		excludeChannelIds    map[int]bool
+		ignoreFirstPriority  bool
+		expectedChannelIds   []int // Possible channel IDs that could be returned
+		shouldError          bool
+		ignoreFirstMaxTokens bool
 	}{
 		{
-			name:                "No exclusions, highest priority",
-			excludeChannelIds:   map[int]bool{},
-			ignoreFirstPriority: false,
-			expectedChannelIds:  []int{1, 2}, // Should only return high priority channels
-			shouldError:         false,
+			name:                 "No exclusions, highest priority",
+			excludeChannelIds:    map[int]bool{},
+			ignoreFirstPriority:  false,
+			expectedChannelIds:   []int{1, 2}, // Should only return high priority channels
+			shouldError:          false,
+			ignoreFirstMaxTokens: false,
 		},
 		{
-			name:                "No exclusions, lower priority",
-			excludeChannelIds:   map[int]bool{},
-			ignoreFirstPriority: true,
-			expectedChannelIds:  []int{3, 4}, // Should only return low priority channels
-			shouldError:         false,
+			name:                 "No exclusions, lower priority",
+			excludeChannelIds:    map[int]bool{},
+			ignoreFirstPriority:  true,
+			expectedChannelIds:   []int{3, 4}, // Should only return low priority channels
+			shouldError:          false,
+			ignoreFirstMaxTokens: false,
 		},
 		{
-			name:                "Exclude one high priority channel",
-			excludeChannelIds:   map[int]bool{1: true},
-			ignoreFirstPriority: false,
-			expectedChannelIds:  []int{2}, // Should return the remaining high priority channel
-			shouldError:         false,
+			name:                 "Exclude one high priority channel",
+			excludeChannelIds:    map[int]bool{1: true},
+			ignoreFirstPriority:  false,
+			expectedChannelIds:   []int{2}, // Should return the remaining high priority channel
+			shouldError:          false,
+			ignoreFirstMaxTokens: false,
 		},
 		{
-			name:                "Exclude all high priority channels",
-			excludeChannelIds:   map[int]bool{1: true, 2: true},
-			ignoreFirstPriority: false,
-			expectedChannelIds:  []int{3, 4}, // Should fallback to next highest available priority (low priority channels)
-			shouldError:         false,
+			name:                 "Exclude all high priority channels",
+			excludeChannelIds:    map[int]bool{1: true, 2: true},
+			ignoreFirstPriority:  false,
+			expectedChannelIds:   []int{3, 4}, // Should fallback to next highest available priority (low priority channels)
+			shouldError:          false,
+			ignoreFirstMaxTokens: false,
 		},
 		{
-			name:                "Exclude one low priority channel",
-			excludeChannelIds:   map[int]bool{3: true},
-			ignoreFirstPriority: true,
-			expectedChannelIds:  []int{4}, // Should return the remaining low priority channel
-			shouldError:         false,
+			name:                 "Exclude one low priority channel",
+			excludeChannelIds:    map[int]bool{3: true},
+			ignoreFirstPriority:  true,
+			expectedChannelIds:   []int{4}, // Should return the remaining low priority channel
+			shouldError:          false,
+			ignoreFirstMaxTokens: false,
 		},
 		{
-			name:                "Exclude all channels",
-			excludeChannelIds:   map[int]bool{1: true, 2: true, 3: true, 4: true},
-			ignoreFirstPriority: false,
-			expectedChannelIds:  []int{}, // Should return error as no channels available
-			shouldError:         true,
+			name:                 "Exclude all channels",
+			excludeChannelIds:    map[int]bool{1: true, 2: true, 3: true, 4: true},
+			ignoreFirstPriority:  false,
+			expectedChannelIds:   []int{}, // Should return error as no channels available
+			shouldError:          true,
+			ignoreFirstMaxTokens: false,
+		},
+		{
+			name:                 "Exclude small max_tokens channels",
+			excludeChannelIds:    map[int]bool{1: true, 2: true, 3: true, 4: true},
+			ignoreFirstPriority:  false,
+			expectedChannelIds:   []int{}, // Should return error as no channels available
+			shouldError:          true,
+			ignoreFirstMaxTokens: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			channel, err := CacheGetRandomSatisfiedChannelExcluding(testGroup, testModel, tt.ignoreFirstPriority, tt.excludeChannelIds)
+			channel, err := CacheGetRandomSatisfiedChannelExcluding(testGroup, testModel, tt.ignoreFirstPriority, tt.excludeChannelIds, tt.ignoreFirstMaxTokens)
 
 			if tt.shouldError {
 				assert.Error(t, err)

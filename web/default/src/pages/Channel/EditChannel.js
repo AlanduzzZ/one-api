@@ -60,6 +60,7 @@ const EditChannel = () => {
     ratelimit: 0,
     model_ratio: '',
     completion_ratio: '',
+    max_tokens: '',
   };
   const [batch, setBatch] = useState(false);
   const [inputs, setInputs] = useState(originInputs);
@@ -316,6 +317,9 @@ const EditChannel = () => {
     }
     if (localInputs.completion_ratio === '') {
       localInputs.completion_ratio = null;
+    }
+    if (localInputs.max_tokens === '') {
+      localInputs.max_tokens = 0;
     }
     if (isEdit) {
       res = await API.put(`/api/channel/`, {
@@ -919,6 +923,24 @@ const EditChannel = () => {
                 {t('channel.edit.completion_ratio_help')}
               </div>
             </Form.Field>
+
+            {/* Channel-specific max_tokens fields */}
+            {inputs.type !== 3 &&
+              inputs.type !== 33 &&
+              inputs.type !== 8 &&
+                inputs.type !== 50 &&
+              inputs.type !== 22 && (
+                <Form.Field>
+                  <Form.Input
+                      label={t('channel.edit.max_tokens')}
+                    name='max_tokens'
+                      placeholder={t('channel.edit.max_tokens_placeholder')}
+                    onChange={handleInputChange}
+                    value={inputs.max_tokens}
+                    autoComplete='new-password'
+                  />
+                </Form.Field>
+              )}
 
             <Button onClick={handleCancel}>
               {t('channel.edit.buttons.cancel')}
