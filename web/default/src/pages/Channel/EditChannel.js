@@ -309,6 +309,7 @@ const EditChannel = () => {
     localInputs.models = localInputs.models.join(',');
     localInputs.group = localInputs.groups.join(',');
     localInputs.ratelimit = parseInt(localInputs.ratelimit);
+    localInputs.max_tokens = parseInt(localInputs.max_tokens);
     localInputs.config = JSON.stringify(config);
 
     // Handle pricing fields - convert empty strings to null for the API
@@ -317,9 +318,6 @@ const EditChannel = () => {
     }
     if (localInputs.completion_ratio === '') {
       localInputs.completion_ratio = null;
-    }
-    if (localInputs.max_tokens === '') {
-      localInputs.max_tokens = 0;
     }
     if (isEdit) {
       res = await API.put(`/api/channel/`, {
