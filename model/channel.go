@@ -40,9 +40,9 @@ type Channel struct {
 	SystemPrompt       *string `json:"system_prompt" gorm:"type:text"`
 	RateLimit          *int    `json:"ratelimit" gorm:"column:ratelimit;default:0"`
 	// Channel-specific pricing tables
-	ModelRatio      *string `json:"model_ratio" gorm:"type:text"`      // JSON string of model pricing ratios
-	CompletionRatio *string `json:"completion_ratio" gorm:"type:text"` // JSON string of completion pricing ratios
-	MaxTokens       *int32    `json:"max_tokens" gorm:"column:max_tokens;default:0"`
+	ModelRatio         *string `json:"model_ratio" gorm:"type:text"`      // JSON string of model pricing ratios
+	CompletionRatio    *string `json:"completion_ratio" gorm:"type:text"` // JSON string of completion pricing ratios
+	MaxTokens          *int32  `json:"max_tokens" gorm:"column:max_tokens;default:0"`
 }
 
 type ChannelConfig struct {

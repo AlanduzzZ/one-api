@@ -60,7 +60,7 @@ const EditChannel = () => {
     ratelimit: 0,
     model_ratio: '',
     completion_ratio: '',
-    max_tokens: '',
+    max_tokens: 0,
   };
   const [batch, setBatch] = useState(false);
   const [inputs, setInputs] = useState(originInputs);
